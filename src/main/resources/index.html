@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VectorDB — HNSW + RAG</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -155,12 +156,35 @@ button {
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── Screen-reader only (accessible labels) ── */
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+/* ── Utility classes (replaces inline styles) ── */
+.flex-col-gap6  { display:flex; flex-direction:column; gap:6px; }
+.flex-col-gap8  { display:flex; flex-direction:column; gap:8px; }
+.flex-row-gap6  { display:flex; gap:6px; }
+.dot-cs     { background:var(--cs);    box-shadow:0 0 5px var(--cs); }
+.dot-math   { background:var(--math);  box-shadow:0 0 5px var(--math); }
+.dot-food   { background:var(--food);  box-shadow:0 0 5px var(--food); }
+.dot-sports { background:var(--sports);box-shadow:0 0 5px var(--sports); }
+.dot-doc    { background:var(--green); box-shadow:0 0 5px var(--green); }
+.hint-muted { color:var(--muted); font-size:11px; }
+.hint-xs    { color:var(--muted); font-size:10px; }
+.hidden     { display:none; }
+.rag-k-sel  { width:auto; flex-shrink:0; }
+.ask-btn    { flex:1; }
+#insertStatus { font-size:11px; color:var(--muted); }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>padhowithPratyush</h1>
+  <h1>Vector Search Engine</h1>
   <span class="badge hl">HNSW</span>
   <span class="badge">KD-TREE</span>
   <span class="badge">BRUTE FORCE</span>
@@ -174,8 +198,9 @@ button {
   <div class="left-panel">
     <div>
       <div class="sec">Query (Demo Vectors)</div>
-      <div style="display:flex;flex-direction:column;gap:6px">
-        <input type="text" id="qInput" placeholder="binary tree, sushi, basketball…" />
+      <div class="flex-col-gap6">
+        <label for="qInput" class="sr-only">Search query</label>
+        <input type="text" id="qInput" title="Search query" placeholder="binary tree, sushi, basketball…" />
         <button class="btn-p" onclick="runSearch()">⚡ SEARCH</button>
       </div>
     </div>
@@ -189,7 +214,7 @@ button {
     </div>
     <div>
       <div class="sec">Distance Metric</div>
-      <select id="metric">
+      <select id="metric" title="Distance metric">
         <option value="cosine">Cosine Similarity</option>
         <option value="euclidean">Euclidean Distance</option>
         <option value="manhattan">Manhattan Distance</option>
@@ -197,24 +222,26 @@ button {
     </div>
     <div>
       <div class="sec">Top-K: <span id="kLabel">5</span></div>
-      <input type="range" id="kSlider" min="1" max="10" value="5"
+      <label for="kSlider" class="sr-only">Top-K value</label>
+      <input type="range" id="kSlider" title="Top-K results" min="1" max="10" value="5"
              oninput="document.getElementById('kLabel').textContent=this.value">
     </div>
     <div>
       <div class="sec">Category Legend</div>
       <div class="legend">
-        <div class="leg-row"><div class="dot" style="background:var(--cs);box-shadow:0 0 5px var(--cs)"></div>CS / Algorithms</div>
-        <div class="leg-row"><div class="dot" style="background:var(--math);box-shadow:0 0 5px var(--math)"></div>Mathematics</div>
-        <div class="leg-row"><div class="dot" style="background:var(--food);box-shadow:0 0 5px var(--food)"></div>Food &amp; Cooking</div>
-        <div class="leg-row"><div class="dot" style="background:var(--sports);box-shadow:0 0 5px var(--sports)"></div>Sports &amp; Games</div>
-        <div class="leg-row"><div class="dot" style="background:var(--green);box-shadow:0 0 5px var(--green)"></div>Documents (RAG)</div>
+        <div class="leg-row"><div class="dot dot-cs"></div>CS / Algorithms</div>
+        <div class="leg-row"><div class="dot dot-math"></div>Mathematics</div>
+        <div class="leg-row"><div class="dot dot-food"></div>Food &amp; Cooking</div>
+        <div class="leg-row"><div class="dot dot-sports"></div>Sports &amp; Games</div>
+        <div class="leg-row"><div class="dot dot-doc"></div>Documents (RAG)</div>
       </div>
     </div>
     <div>
       <div class="sec">Insert Demo Vector</div>
-      <div style="display:flex;flex-direction:column;gap:6px">
-        <input type="text" id="addMeta" placeholder="Description…" />
-        <select id="addCat">
+      <div class="flex-col-gap6">
+        <label for="addMeta" class="sr-only">Vector description</label>
+        <input type="text" id="addMeta" title="Vector description" placeholder="Description…" />
+        <select id="addCat" title="Vector category">
           <option value="cs">CS / Algorithms</option>
           <option value="math">Mathematics</option>
           <option value="food">Food &amp; Cooking</option>
@@ -250,21 +277,21 @@ button {
       <div>
         <div class="sec">Top Matches</div>
         <div class="results" id="results">
-          <div style="color:var(--muted);font-size:11px">Run a search to see results…</div>
+          <div class="hint-muted">Run a search to see results…</div>
         </div>
       </div>
       <div>
         <div class="sec">Query Embedding (16D)</div>
         <canvas id="vecCvs" height="76"></canvas>
       </div>
-      <div id="benchSec" style="display:none">
+      <div id="benchSec" class="hidden">
         <div class="sec">Algorithm Comparison</div>
         <div class="bench" id="benchBars"></div>
       </div>
       <div>
         <div class="sec">HNSW Graph Layers</div>
         <div class="layers" id="layers">
-          <div style="color:var(--muted);font-size:11px">Loading…</div>
+          <div class="hint-muted">Loading…</div>
         </div>
       </div>
     </div>
@@ -277,17 +304,19 @@ button {
       </div>
       <div>
         <div class="sec">Insert Document</div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <input type="text" id="docTitle" placeholder="Document title / topic…" />
-          <textarea id="docText" placeholder="Paste your notes, textbook excerpt, lecture content…&#10;&#10;Long text is automatically split into overlapping chunks and each chunk gets its own real embedding via Ollama's nomic-embed-text model."></textarea>
+        <div class="flex-col-gap8">
+          <label for="docTitle" class="sr-only">Document title</label>
+          <input type="text" id="docTitle" title="Document title" placeholder="Document title / topic…" />
+          <label for="docText" class="sr-only">Document text</label>
+          <textarea id="docText" title="Document text" placeholder="Paste your notes, textbook excerpt, lecture content…&#10;&#10;Long text is automatically split into overlapping chunks and each chunk gets its own real embedding via Ollama's nomic-embed-text model."></textarea>
           <button class="btn-g" id="insertDocBtn" onclick="insertDocument()">⚡ EMBED &amp; INSERT</button>
-          <div id="insertStatus" style="font-size:11px;color:var(--muted)"></div>
+          <div id="insertStatus"></div>
         </div>
       </div>
       <div>
         <div class="sec">Stored Documents (<span id="docCountLabel">0</span>)</div>
         <div class="doc-list" id="docList">
-          <div style="color:var(--muted);font-size:11px">No documents yet. Insert some above.</div>
+          <div class="hint-muted">No documents yet. Insert some above.</div>
         </div>
       </div>
     </div>
@@ -296,23 +325,24 @@ button {
     <div class="tab-content" id="tab-rag">
       <div>
         <div class="sec">Ask a Question</div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <textarea id="ragQuestion" rows="3" placeholder="What is dynamic programming?&#10;Explain the main idea of HNSW.&#10;How does the recipe differ from…"></textarea>
-          <div style="display:flex;gap:6px">
-            <select id="ragK" style="width:auto;flex-shrink:0">
+        <div class="flex-col-gap8">
+          <label for="ragQuestion" class="sr-only">Question for AI</label>
+          <textarea id="ragQuestion" title="Question for AI" rows="3" placeholder="What is dynamic programming?&#10;Explain the main idea of HNSW.&#10;How does the recipe differ from…"></textarea>
+          <div class="flex-row-gap6">
+            <select id="ragK" title="Number of context chunks" class="rag-k-sel">
               <option value="2">Top 2</option>
               <option value="3" selected>Top 3</option>
               <option value="5">Top 5</option>
             </select>
-            <button class="btn-g" id="askBtn" onclick="askAI()" style="flex:1">🤖 ASK AI</button>
+            <button class="btn-g ask-btn" id="askBtn" onclick="askAI()">🤖 ASK AI</button>
           </div>
-          <div style="font-size:10px;color:var(--muted)">Uses your inserted documents as context. Answers come from the local LLM.</div>
+          <div class="hint-xs">Uses your inserted documents as context. Answers come from the local LLM.</div>
         </div>
       </div>
       <div>
         <div class="sec">Conversation</div>
         <div class="chat-history" id="chatHistory">
-          <div style="color:var(--muted);font-size:11px">Ask a question about your inserted documents…</div>
+          <div class="hint-muted">Ask a question about your inserted documents…</div>
         </div>
       </div>
     </div>
@@ -591,7 +621,7 @@ async function runBenchmark() {
   try {
     const r=await fetch(`${API}/benchmark?v=${emb.join(',')}&k=5&metric=${metric}`);
     const d=await r.json();
-    document.getElementById('benchSec').style.display='block';
+    document.getElementById('benchSec').classList.remove('hidden');
     const mx=Math.max(d.bruteforceUs,d.kdtreeUs,d.hnswUs,1);
     document.getElementById('benchBars').innerHTML=[
       {lbl:'Brute Force',us:d.bruteforceUs,col:'#f38ba8'},
