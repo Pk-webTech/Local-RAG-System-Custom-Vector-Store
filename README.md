@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🧠 VectorDB — Java Edition
+# 🧠 Local RAG System with Custom-Built Vector Store
 
 **A Vector Database built from scratch in Java.**  
 Implements HNSW, KD-Tree, and Brute Force search side-by-side with a full RAG pipeline powered by a local LLM via Ollama.
